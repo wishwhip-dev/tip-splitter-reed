@@ -154,6 +154,8 @@ export function SplitHistory() {
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-56 w-full" aria-hidden="true" />
+          ) : readFailed ? (
+            <p className="py-2 text-sm text-destructive">Saved totals could not be read — press Retry on the list above.</p>
           ) : chartData.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">
               No saved splits yet — save one above and its total gets a bar here.
