@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { animate, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { appConfig } from "@/app/config";
 import { ShareButton } from "@/components/share-button";
@@ -272,7 +273,7 @@ export function TipSplitter() {
 
       {result ? (
         <section ref={resultRef} tabIndex={-1} aria-label={`Split result: ${money(result.perPersonCents)} each`} className="flex flex-col gap-4 outline-none">
-          <SplitReadout result={result} money={money} peopleText={people.trim()} tipText={tipText} />
+          <SplitReadout result={result} money={money} currency={currency} peopleText={people.trim()} tipText={tipText} />
 
             <Card>
               <CardContent className="pt-6">
@@ -409,11 +410,13 @@ function QuickTips({
 function SplitReadout({
   result,
   money,
+  currency,
   peopleText,
   tipText,
 }: {
   result: SplitResult;
   money: (cents: number) => string;
+  currency: string;
   peopleText: string;
   tipText: string;
 }) {
@@ -424,7 +427,7 @@ function SplitReadout({
           Each of {peopleText || String(result.people)} pays, at {tipText}% tip
         </p>
         <p aria-live="polite" className="text-5xl font-semibold tabular-nums tracking-tight">
-          {money(result.perPersonCents)}
+          <SlidingMoney cents={result.perPersonCents} currency={currency} />
         </p>
         <dl className="grid w-full grid-cols-2 gap-2 pt-1">
           <div className="rounded-lg bg-muted/60 px-3 py-2">
@@ -438,5 +441,46 @@ function SplitReadout({
         </dl>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * The per-person figure, tweened to its new value when the split changes: the digits count from
+ * the old amount to the new one over a third of a second, written straight to the node (no state
+ * updates per frame), and instantly under prefers-reduced-motion.
+ */
+function SlidingMoney({ cents, currency }: { cents: number; currency: string }) {
+  const textRef = useRef<HTMLSpanElement>(null);
+  // What the digits show right now, so a change mid-flight slides from there, not from the last target.
+  const shown = useRef(cents);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const node = textRef.current;
+    if (!node || shown.current === cents) return;
+    const format = (value: number) => `${currency}${centsToText(Math.round(value))}`;
+    if (reduced) {
+      shown.current = cents;
+      node.textContent = format(cents);
+      return;
+    }
+    // Pin the starting frame before the tween's first tick, so the value never flashes ahead.
+    node.textContent = format(shown.current);
+    const controls = animate(shown.current, cents, {
+      duration: 0.35,
+      ease: "easeOut",
+      onUpdate: (value) => {
+        shown.current = value;
+        node.textContent = format(value);
+      },
+    });
+    return () => controls.stop();
+  }, [cents, currency, reduced]);
+
+  return (
+    <span ref={textRef} className="tabular-nums">
+      {currency}
+      {centsToText(cents)}
+    </span>
   );
 }
