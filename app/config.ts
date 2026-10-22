@@ -1,4 +1,4 @@
-import { color, defineConfig, looksLikeContact, text } from "@/lib/config/schema";
+import { color, defineConfig, looksLikeContact, number, text, list } from "@/lib/config/schema";
 import { identity } from "./identity";
 
 /**
@@ -11,7 +11,7 @@ import { identity } from "./identity";
  *   the seed), a few on/off options (`toggle`) or choices (`choice`). At most 12 settings.
  * - Never a web address, an email address, a phone number, anything private, or anything that
  *   changes what is saved or sent. Defaults are sample content, never anyone's real details.
- * - Labels are plain US English, as a person reads them on a form ("Color", "Starting chores").
+ * - Labels are plain US English, as a person reads them on a form ("Currency symbol").
  * - Read every value with `useAppConfig(appConfig)` in a client component, and the starting list
  *   with `currentConfig(appConfig)` in the seed in lib/db.ts. Never in a server component, and
  *   never type a value declared here into the page a second time.
@@ -23,11 +23,17 @@ import { identity } from "./identity";
 
 // The app's name, unless it reads like a web address or a number ("Notes.app"), which no setting may
 // hold: then a plain default, so the build never fails on the name alone.
-const startingTitle = looksLikeContact(identity.name) ? "My list" : identity.name;
+const startingTitle = looksLikeContact(identity.name) ? "My tip splitter" : identity.name;
 
 export const appConfig = defineConfig({
   title: text({ label: "Title", default: startingTitle, max: 60, role: "title" }),
   // `role: "accent"` paints `--primary` (buttons, links, focus rings) for a copy that picks another
   // color. A copy that keeps this default looks exactly as the app was built.
   accent: color({ label: "Color", default: identity.accent.toLowerCase(), role: "accent" }),
+  // The symbol written in front of every amount on the page, from the result panel to the history.
+  currency: text({ label: "Currency symbol", default: "$", max: 4 }),
+  // The tip percentage the form starts at, until a preset or the keyboard changes it.
+  defaultTip: number({ label: "Default tip percentage", default: 18, min: 0, max: 100 }),
+  // The quick-tip preset buttons, as percentages, in the order they are shown.
+  quickTips: list({ label: "Quick-tip buttons", itemLabel: "Percentage", default: ["10", "15", "18", "20", "25"], maxItems: 6, itemMax: 4 }),
 });
