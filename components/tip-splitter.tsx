@@ -43,6 +43,12 @@ export function TipSplitter() {
   const [tipInput, setTipInput] = useState<string | null>(null);
   const [people, setPeople] = useState("");
   const [saving, setSaving] = useState(false);
+  // Errors only show for fields the person has typed into, or once a save or calculate was
+  // attempted — so a untouched form, and a freshly reset one, are blank and quiet.
+  const [attempted, setAttempted] = useState(false);
+  const [touched, setTouched] = useState({ bill: false, tip: false, people: false });
+  const markTouched = (field: "bill" | "tip" | "people") =>
+    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
 
   const billRef = useRef<HTMLInputElement>(null);
   const tipRef = useRef<HTMLInputElement>(null);
