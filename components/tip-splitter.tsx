@@ -25,7 +25,6 @@ import {
   centsToText,
   computeSplit,
   parseSplitInputs,
-  type SplitErrors,
   type SplitResult,
 } from "@/lib/split";
 import { useStorageStatus } from "@/lib/storage/react";
@@ -128,8 +127,6 @@ export function TipSplitter() {
       },
     });
   };
-
-  const resultTitle = result ? `Split result: ${money(result.perPersonCents)} each` : "Split result";
 
   return (
     <div className="flex flex-col gap-6">
@@ -318,7 +315,8 @@ function QuickTips({
   value: string;
   onPick: (preset: string) => void;
 }) {
-  const current = Number(value);
+  // `Number("")` is 0, not NaN — a blank field must not light up a "0%" preset.
+  const current = value.trim() === "" ? Number.NaN : Number(value);
   return (
     <div role="group" aria-label="Quick tip percentages" className="flex flex-wrap gap-2">
       {presets.map((preset) => {
@@ -342,34 +340,20 @@ function QuickTips({
 }
 
 /**
- * The live readout. While the values are valid the per-person share is the largest figure on the
- * panel, with the tip and the total smaller beneath it; while they are not, there are no figures.
+ * The live readout: the per-person share is the largest figure on the panel, with the tip amount
+ * and the total smaller beneath it. It only renders while the values are valid.
  */
 function SplitReadout({
   result,
-  errors,
   money,
   peopleText,
   tipText,
 }: {
-  result: SplitResult | undefined;
-  errors: SplitErrors;
+  result: SplitResult;
   money: (cents: number) => string;
   peopleText: string;
   tipText: string;
 }) {
-  if (!result) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col gap-1 pt-6 text-center">
-          <p className="font-medium">No split to show yet</p>
-          <p className="text-sm text-muted-foreground">
-            {errors.bill ?? errors.tipPercent ?? errors.people ?? "Enter a bill, a tip and how many people."}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 pt-6 text-center">
