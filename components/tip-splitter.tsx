@@ -306,7 +306,7 @@ export function TipSplitter() {
                 className="sm:self-start"
                 aria-expanded={explanation ? true : undefined}
                 aria-controls={explanation ? "split-explanation" : undefined}
-                onClick={() => setExplanation(explainSplit(result, tipText, money))}
+                onClick={() => setExplanation(explainSplit(result, money))}
               >
                 Explain split
               </Button>
@@ -330,9 +330,9 @@ export function TipSplitter() {
  * Writes one friendly sentence in plain words from the figures on screen — the app's own words,
  * from its own numbers, with no model and no network behind it.
  */
-function explainSplit(result: SplitResult, tipText: string, money: (cents: number) => string): string {
+function explainSplit(result: SplitResult, money: (cents: number) => string): string {
   // "an 18%", "an 8.5%", "an 80%" — but "a 15%", "a 17.5%", "a 20%".
-  const article = /^(8|11|18)/.test(String(Math.trunc(result.tipPercent ?? Number(tipText)))) ? "an" : "a";
+  const article = /^(8|11|18)/.test(String(Math.trunc(result.tipPercent))) ? "an" : "a";
   const who = result.people === 1 ? "1 person" : `${result.people} people`;
   return [
     `A ${money(result.billCents)} bill with ${article} ${tipText}% tip split between ${who}`,
