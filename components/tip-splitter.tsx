@@ -335,7 +335,7 @@ function explainSplit(result: SplitResult, money: (cents: number) => string): st
   const article = /^(8|11|18)/.test(String(Math.trunc(result.tipPercent))) ? "an" : "a";
   const who = result.people === 1 ? "1 person" : `${result.people} people`;
   return [
-    `A ${money(result.billCents)} bill with ${article} ${tipText}% tip split between ${who}`,
+    `A ${money(result.billCents)} bill with ${article} ${result.tipPercent}% tip split between ${who}`,
     `comes to ${money(result.totalCents)}, so each person pays ${money(result.perPersonCents)}.`,
   ].join(" ");
 }
