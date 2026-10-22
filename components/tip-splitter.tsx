@@ -84,7 +84,18 @@ export function TipSplitter() {
     };
     try {
       await addSplit(record);
-      toast.success(`Saved: ${money(result.totalCents)} total, ${money(result.perPersonCents)} each`);
+      // Prove the write landed: read the table back and look for this row before claiming success.
+      const kept = await listSplits().catch(() => undefined);
+      const confirmed = kept?.some((row) => row.id === record.id) ?? false;
+      if (confirmed) {
+        const count = kept?.length ?? 0;
+        toast.success(
+          `Saved: ${money(result.totalCents)} total, ${money(result.perPersonCents)} each — `
+          + `${count} split${count === 1 ? "" : "s"} kept in this browser`,
+        );
+      } else {
+        toast.error("Saved, but this browser did not confirm keeping it.");
+      }
     } catch (error) {
       toast.error(`Could not save the split: ${error instanceof Error ? error.message : "unknown error"}`);
     } finally {
