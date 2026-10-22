@@ -60,9 +60,8 @@ export function TipSplitter() {
     event.preventDefault();
     if (!result || !values || saving) return;
     setSaving(true);
-    const record: Split = {
+    const record: Omit<Split, "savedAt"> = {
       id: newId(),
-      savedAt: Date.now(),
       bill: values.bill,
       tipPercent: values.tipPercent,
       people: values.people,
