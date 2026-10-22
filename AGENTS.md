@@ -17,7 +17,7 @@ A request that needs one of these is outside what this project can deliver as it
 
 ## Stack
 
-Next.js App Router · TypeScript · Tailwind CSS · shadcn/ui · 14 shadcn/ui components pre-installed (dialog, select, table, card, form inputs, tabs, alert) · Dexie (browser database, device-local) · Recharts (themed chart components, already wired to the palette) · Sonner (toast notifications, already mounted) · File API (FileDrop to choose, drop or paste files; lib/files.ts to read, check, resize and save them) · MediaDevices camera (CameraView and lib/camera.ts; opened from a button, never on load) · Web Audio (one shared AudioContext in lib/audio.ts; sound starts on a user gesture) · MediaDevices microphone and MediaRecorder (requestMicrophone, recordMicrophone) · Web Share (ShareButton and lib/share.ts: a result drawn to an image and shared or saved, a link shared or copied) · Per-person settings (app/config.ts, read with useAppConfig) · Home screen and offline (public/sw.js).
+Next.js App Router · TypeScript · Tailwind CSS · shadcn/ui · 14 shadcn/ui components pre-installed (dialog, select, table, card, form inputs, tabs, alert) · Dexie (browser database, device-local) · Recharts (themed chart components, already wired to the palette) · Sonner (toast notifications, already mounted) · File API (FileDrop to choose, drop or paste files; lib/files.ts to read, check, resize and save them) · MediaDevices camera (CameraView and lib/camera.ts; opened from a button, never on load) · Web Audio (one shared AudioContext in lib/audio.ts; sound starts on a user gesture) · MediaDevices microphone and MediaRecorder (requestMicrophone, recordMicrophone) · Web Share (ShareButton and lib/share.ts: a result drawn to an image and shared or saved, a link shared or copied) · AI model calls (askModel and useAsk in lib/ai.ts, through the app's own /api/ai route; no key in the app, capped) · Per-person settings (app/config.ts, read with useAppConfig) · Home screen and offline (public/sw.js).
 
 ## Layout
 
@@ -43,6 +43,8 @@ lib/camera.ts                request, attach, capture and stop a camera stream.
 lib/audio.ts                 the shared AudioContext, unlock, mute, microphone request and recording. Use it; do not create another context.
 components/share-button.tsx  the share control, with its outcome shown as text. Use it; do not call navigator.share.
 lib/share.ts                 draw a share card, share or save an image, share or copy a link.
+app/api/ai/route.ts          the app's route to the AI model. Do not edit it; call it through lib/ai.ts.
+lib/ai.ts                    askModel, useAsk and the state text. Every model call goes through it.
 app/config.ts                what a person can set to make this app theirs. Edit this.
 lib/config/                  the settings package, vendored in. Do NOT edit; see docs/config.md.
 ```
@@ -64,12 +66,13 @@ cannot do as well as what it can.
 
 - **Component kit.** 14 shadcn/ui components, the design tokens they need, and the cn() helper. Read `docs/components.md` before building on it.
 - **Browser storage.** Dexie over IndexedDB, already set up: schemas, seeding, live queries and export/import. Data lives in one browser on one device — no sync, no sharing between visitors, no server copy. Read `docs/storage.md` before building on it.
-- **Charts.** Recharts, wrapped and themed. Series colours follow the project's palette. Read `docs/charts.md` before building on it.
+- **Charts.** Recharts, wrapped and themed as `ChartContainer`. Series colours follow the project's palette. Read `docs/charts.md` before building on it.
 - **Toast notifications.** Sonner toasts, mounted and ready. Call toast() from anywhere on the client. Read `docs/notifications.md` before building on it.
 - **Files.** Choosing, dropping and pasting files through one component, plus helpers that check a file by opening it, shrink photos, show Blobs and save them. Read `docs/files.md` before building on it.
 - **Camera.** The camera opened from a button, with a live preview, photo capture, a visible blocked or unavailable state, and its tracks stopped when done. Read `docs/camera.md` before building on it.
 - **Sound.** Web Audio set up properly: one shared context unlocked on a user gesture, hidden-tab handling, and the microphone with a visible denied state, recording and a level meter. Read `docs/audio.md` before building on it.
 - **Sharing.** Share a result as an image sized for stories, posts or link previews, or share a link, with a save or copy fallback where the device has no share sheet. Read `docs/share.md` before building on it.
+- **AI helper.** Ask a language model from the app, with no key in it: one call or a hook with thinking, unavailable and limited states, JSON answers in a given shape, and spending capped by the service. Read `docs/ai.md` before building on it.
 - **Move to another device.** The app's data moved to another device once, encrypted, with a code that lasts a day. Photos stay. Read `docs/sync.md` before building on it.
 - **Per-person settings.** app/config.ts declares settings anyone can set in the app's link to use it as their own copy, with its own data. Already mounted. Read `docs/config.md` before building on it.
 - **Home screen.** Installs on a phone's home screen and opens offline after one visit. Already mounted; never edit public/sw.js or add another service worker or install prompt. Read `docs/home-screen.md` before building on it.
@@ -158,6 +161,9 @@ meets these requirements:
 - **The page title is the app's name from `app/identity.ts`**; the check reads it and a placeholder
   title counts against you. Keep the name and description there true to what the app became. Rewrite
   the description in `app/identity.ts` as what the app is, never the request that asked for it.
+- **AI answers come through `lib/ai.ts`**. The check runs it with sample answers instead of a model,
+  and the page must show the answer when it arrives, or the unavailable or limited state as text
+  when a call fails — never a blank, a spinner that does not end, or a feature that disappears.
 - **The app opens offline after one visit.** With the network off, the home page renders from what
   is stored. Keep `public/sw.js` and `<HomeScreen />` as shipped; anything that needs the internet
   says so when offline.
@@ -193,3 +199,6 @@ What is judged is the running application, being used.
 - **Do not delete this file**, any document named above, or `template.capabilities.json`. The
   first two are the briefing for every later task on this repository; the third is how the planner
   knows what this project can do before it writes a single criterion.
+- **Do not edit this file, `docs/components.md`, `template.capabilities.json` or
+  `app/providers.tsx`.** They are refreshed when a module is added, and an edit is lost. Mount
+  something in `app/providers.tsx` only when the supervisor tells you to.
