@@ -86,6 +86,15 @@ export function SplitHistory() {
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-2/3" />
             </div>
+          ) : readFailed ? (
+            <div className="flex flex-col items-start gap-2 py-2">
+              <p className="text-sm text-destructive">
+                This browser did not hand back the saved splits — the list could not be read.
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setAttempt((value) => value + 1)}>
+                Retry
+              </Button>
+            </div>
           ) : splits.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">
               No saved splits yet. Fill in the bill above and press Save split — it will be listed here.
