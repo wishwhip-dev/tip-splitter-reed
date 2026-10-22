@@ -43,9 +43,9 @@ export function SplitHistory() {
   const [attempt, setAttempt] = useState(0);
   const { data, isLoading } = useStoredQuery(database, async () => {
     try {
-      return { ok: true, rows: await listSplits() };
+      return { ok: true, rows: await listSplits() } as const;
     } catch {
-      return { ok: false };
+      return { ok: false } as const;
     }
   }, [attempt]);
   const readFailed = data !== undefined && !data.ok;
