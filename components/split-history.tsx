@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { toast } from "sonner";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { appConfig } from "@/app/config";
@@ -34,7 +35,21 @@ function shortDate(ms: number): string {
 /** Every saved split, newest first, each deletable on its own — plus the chart of their totals. */
 export function SplitHistory() {
   const { currency } = useAppConfig(appConfig);
-  const { data, isLoading } = useStoredQuery(database, listSplits);
+
+  /**
+   * The read behind the table and the chart, kept self-healing: a failed query reports itself
+   * instead of looking like "no saved splits yet", and Retry re-runs it.
+   */
+  const [attempt, setAttempt] = useState(0);
+  const { data, isLoading } = useStoredQuery(database, async () => {
+    try {
+      return { ok: true, rows: await listSplits() } as const;
+    } catch {
+      return { ok: false } as const;
+    }
+  }, [attempt]);
+  const readFailed = data !== undefined && !data.ok;
+  const splits = data?.ok ? data.rows : [];
 
   const deleteOne = async (split: Split) => {
     try {
@@ -54,7 +69,6 @@ export function SplitHistory() {
     }
   };
 
-  const splits = data ?? [];
   const chartData = splits.map((split) => ({ date: shortDate(split.savedAt), total: split.total / 100 }));
 
   return (
@@ -70,6 +84,15 @@ export function SplitHistory() {
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-full" />
               <Skeleton className="h-8 w-2/3" />
+            </div>
+          ) : readFailed ? (
+            <div className="flex flex-col items-start gap-2 py-2">
+              <p className="text-sm text-destructive">
+                This browser did not hand back the saved splits — the list could not be read.
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={() => setAttempt((value) => value + 1)}>
+                Retry
+              </Button>
             </div>
           ) : splits.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">
@@ -97,11 +120,11 @@ export function SplitHistory() {
                     <TableCell className="whitespace-nowrap pl-0">
                       <time dateTime={new Date(split.savedAt).toISOString().slice(0, 10)}>{shortDate(split.savedAt)}</time>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right tabular-nums">{centsToText(split.bill)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right tabular-nums">{currency}{centsToText(split.bill)}</TableCell>
                     <TableCell className="whitespace-nowrap text-right tabular-nums">{split.tipPercent}%</TableCell>
                     <TableCell className="text-right tabular-nums">{split.people}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{centsToText(split.total)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{centsToText(split.perPerson)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{currency}{centsToText(split.total)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{currency}{centsToText(split.perPerson)}</TableCell>
                     <TableCell className="pr-0 text-right">
                       <Button
                         type="button"
@@ -130,6 +153,8 @@ export function SplitHistory() {
         <CardContent>
           {isLoading ? (
             <Skeleton className="h-56 w-full" aria-hidden="true" />
+          ) : readFailed ? (
+            <p className="py-2 text-sm text-destructive">Saved totals could not be read — press Retry on the list above.</p>
           ) : chartData.length === 0 ? (
             <p className="py-2 text-sm text-muted-foreground">
               No saved splits yet — save one above and its total gets a bar here.

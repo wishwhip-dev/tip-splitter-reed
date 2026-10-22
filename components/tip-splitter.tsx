@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useAppConfig } from "@/lib/config/react";
 import { database, newId, type Split } from "@/lib/db";
-import { addSplit } from "@/lib/data/splits";
+import { addSplit, listSplits } from "@/lib/data/splits";
 import {
   centsToText,
   computeSplit,
@@ -42,6 +42,9 @@ export function TipSplitter() {
   const [tipInput, setTipInput] = useState<string | null>(null);
   const [people, setPeople] = useState("");
   const [saving, setSaving] = useState(false);
+  // The plain-words sentence shown after "Explain split" is pressed; cleared by Reset and by
+  // editing any field, so the page never shows wording that contradicts the figures on screen.
+  const [explanation, setExplanation] = useState<string | undefined>(undefined);
   // Errors only show for fields the person has typed into, or once a save or calculate was
   // attempted — so a untouched form, and a freshly reset one, are blank and quiet.
   const [attempted, setAttempted] = useState(false);
@@ -81,7 +84,18 @@ export function TipSplitter() {
     };
     try {
       await addSplit(record);
-      toast.success(`Saved: ${money(result.totalCents)} total, ${money(result.perPersonCents)} each`);
+      // Prove the write landed: read the table back and look for this row before claiming success.
+      const kept = await listSplits().catch(() => undefined);
+      const confirmed = kept?.some((row) => row.id === record.id) ?? false;
+      if (confirmed) {
+        const count = kept?.length ?? 0;
+        toast.success(
+          `Saved: ${money(result.totalCents)} total, ${money(result.perPersonCents)} each — `
+          + `${count} split${count === 1 ? "" : "s"} kept in this browser`,
+        );
+      } else {
+        toast.error("Saved, but this browser did not confirm keeping it.");
+      }
     } catch (error) {
       toast.error(`Could not save the split: ${error instanceof Error ? error.message : "unknown error"}`);
     } finally {
@@ -114,6 +128,7 @@ export function TipSplitter() {
     setPeople("");
     setTouched({ bill: false, tip: false, people: false });
     setAttempted(false);
+    setExplanation(undefined);
     toast("Fields cleared", {
       description: "The result and breakdown were removed. Saved splits are untouched.",
       action: {
@@ -164,6 +179,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setBill(event.target.value);
                 markTouched("bill");
+                setExplanation(undefined);
               }}
               aria-invalid={billError ? true : undefined}
               aria-describedby={billError ? "bill-error" : undefined}
@@ -190,6 +206,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setTipInput(event.target.value);
                 markTouched("tip");
+                setExplanation(undefined);
               }}
               aria-invalid={tipError ? true : undefined}
               aria-describedby={tipError ? "tip-error" : undefined}
@@ -212,6 +229,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setPeople(event.target.value);
                 markTouched("people");
+                setExplanation(undefined);
               }}
               aria-invalid={peopleError ? true : undefined}
               aria-describedby={peopleError ? "people-error" : undefined}
@@ -227,6 +245,7 @@ export function TipSplitter() {
           onPick={(preset) => {
             setTipInput(preset);
             markTouched("tip");
+            setExplanation(undefined);
           }}
         />
 
@@ -290,10 +309,46 @@ export function TipSplitter() {
                 })
               }
             />
+
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="sm:self-start"
+                aria-expanded={explanation ? true : undefined}
+                aria-controls={explanation ? "split-explanation" : undefined}
+                onClick={() => setExplanation(explainSplit(result, money))}
+              >
+                Explain split
+              </Button>
+              {explanation ? (
+                <p
+                  id="split-explanation"
+                  role="status"
+                  className="rounded-lg bg-muted/60 px-4 py-3 text-sm leading-relaxed text-pretty"
+                >
+                  {explanation}
+                </p>
+              ) : null}
+            </div>
         </section>
       ) : null}
     </div>
   );
+}
+
+/**
+ * Writes one friendly sentence in plain words from the figures on screen — the app's own words,
+ * from its own numbers, with no model and no network behind it.
+ */
+function explainSplit(result: SplitResult, money: (cents: number) => string): string {
+  // "an 18%", "an 8.5%", "an 80%" — but "a 15%", "a 17.5%", "a 20%".
+  const article = /^(8|11|18)/.test(String(Math.trunc(result.tipPercent))) ? "an" : "a";
+  const who = result.people === 1 ? "1 person" : `${result.people} people`;
+  return [
+    `A ${money(result.billCents)} bill with ${article} ${result.tipPercent}% tip split between ${who}`,
+    `comes to ${money(result.totalCents)}, so each person pays ${money(result.perPersonCents)}.`,
+  ].join(" ");
 }
 
 /** The inline, named problem under a field. Nothing renders while the value is fine. */
