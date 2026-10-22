@@ -35,7 +35,21 @@ function shortDate(ms: number): string {
 /** Every saved split, newest first, each deletable on its own — plus the chart of their totals. */
 export function SplitHistory() {
   const { currency } = useAppConfig(appConfig);
-  const { data, isLoading } = useStoredQuery(database, listSplits);
+
+  /**
+   * The read behind the table and the chart, kept self-healing: a failed query reports itself
+   * instead of looking like "no saved splits yet", and Retry re-runs it.
+   */
+  const [attempt, setAttempt] = useState(0);
+  const { data, isLoading } = useStoredQuery(database, async () => {
+    try {
+      return { ok: true, rows: await listSplits() };
+    } catch {
+      return { ok: false };
+    }
+  }, [attempt]);
+  const readFailed = data !== undefined && !data.ok;
+  const splits = data?.ok ? data.rows : [];
 
   const deleteOne = async (split: Split) => {
     try {
