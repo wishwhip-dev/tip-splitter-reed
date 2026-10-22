@@ -23,3 +23,13 @@ export async function addSplit(split: Omit<Split, "savedAt"> & { savedAt?: numbe
 export async function deleteSplit(id: string): Promise<void> {
   await (await splits()).delete(id);
 }
+
+/** Stores the thank-you message with its split, clearing the writing/failed status. */
+export async function saveThanks(id: string, message: string): Promise<void> {
+  await (await splits()).update(id, { thanks: message, thanksStatus: undefined });
+}
+
+/** Marks that the model is being asked ("writing") or that the last ask failed ("failed"). */
+export async function setThanksStatus(id: string, status: "writing" | "failed"): Promise<void> {
+  await (await splits()).update(id, { thanksStatus: status });
+}
