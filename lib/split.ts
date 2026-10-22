@@ -39,6 +39,8 @@ export type SplitResult = {
   bill: number;
   tipPercent: number;
   people: number;
+  /** The bill in cents. */
+  billCents: number;
   /** The tip in cents. */
   tipCents: number;
   /** Bill plus tip, in cents. */
@@ -60,6 +62,7 @@ export function computeSplit(bill: number, tipPercent: number, people: number): 
     bill,
     tipPercent,
     people,
+    billCents,
     tipCents,
     totalCents,
     perPersonCents,
