@@ -164,13 +164,16 @@ export function TipSplitter() {
               min="0"
               placeholder="84.50"
               value={bill}
-              onChange={(event) => setBill(event.target.value)}
-              aria-invalid={errors.bill ? true : undefined}
-              aria-describedby={errors.bill ? "bill-error" : undefined}
+              onChange={(event) => {
+                setBill(event.target.value);
+                markTouched("bill");
+              }}
+              aria-invalid={billError ? true : undefined}
+              aria-describedby={billError ? "bill-error" : undefined}
               className="pl-9 text-base"
             />
           </div>
-          <FieldError id="bill-error" message={errors.bill} />
+          <FieldError id="bill-error" message={billError} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -187,12 +190,15 @@ export function TipSplitter() {
               max="100"
               placeholder="18"
               value={tipText}
-              onChange={(event) => setTipInput(event.target.value)}
-              aria-invalid={errors.tipPercent ? true : undefined}
-              aria-describedby={errors.tipPercent ? "tip-error" : undefined}
+              onChange={(event) => {
+                setTipInput(event.target.value);
+                markTouched("tip");
+              }}
+              aria-invalid={tipError ? true : undefined}
+              aria-describedby={tipError ? "tip-error" : undefined}
               className="text-base"
             />
-            <FieldError id="tip-error" message={errors.tipPercent} />
+            <FieldError id="tip-error" message={tipError} />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="people">People</Label>
