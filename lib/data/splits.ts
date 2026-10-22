@@ -4,9 +4,15 @@ import { database, type Split } from "@/lib/db";
 
 const splits = async () => (await database.ready()).splits;
 
-/** Every saved split, newest first. */
+/** Every saved split, newest first.
+ *
+ * Sorted in the browser rather than with `.orderBy("savedAt")`: a stale database from an earlier
+ * build can lack the savedAt index (its open then succeeds but reads over the index throw), and
+ * the history must still list. `savedAt` is set on every write, so the sort is total.
+ */
 export async function listSplits(): Promise<Split[]> {
-  return (await splits()).orderBy("savedAt").reverse().toArray();
+  const rows = await (await splits()).toArray();
+  return rows.sort((a, b) => b.savedAt - a.savedAt);
 }
 
 /** Writes a split, stamping it with the current time when it does not carry one (an undone delete does). */
