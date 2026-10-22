@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { appConfig } from "@/app/config";
@@ -19,8 +19,9 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { useAppConfig } from "@/lib/config/react";
 import { database, type Split } from "@/lib/db";
-import { addSplit, deleteSplit, listSplits } from "@/lib/data/splits";
+import { addSplit, deleteSplit, listSplits, setThanksStatus } from "@/lib/data/splits";
 import { centsToText } from "@/lib/split";
+import { generateThanks } from "@/lib/thanks";
 import { useStoredQuery } from "@/lib/storage/react";
 
 const chartConfig = {
@@ -30,6 +31,66 @@ const chartConfig = {
 /** "Oct 22" — the label under each history row and each chart bar. */
 function shortDate(ms: number): string {
   return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/**
+ * The thank-you area under one history row, drawn from the split's own stored state so it reads
+ * the same after a reload: the message, "writing", a failure note with Try again, or, on splits
+ * saved before thank-yous existed, the button that asks for one.
+ */
+function ThanksArea({ split, busy, onAsk }: { split: Split; busy: boolean; onAsk: () => void }) {
+  if (split.thanks) {
+    return <p className="text-sm italic leading-snug">“{split.thanks}”</p>;
+  }
+  if (split.thanksStatus === "writing" || busy) {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p role="status" className="text-sm text-muted-foreground">Writing thank-you…</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={onAsk}
+          aria-label="Try writing the thank-you note again"
+          className="h-8 px-2"
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (split.thanksStatus === "failed") {
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p role="status" className="text-sm text-destructive">The thank-you couldn’t be written — the assistant is unavailable.</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={onAsk}
+          aria-label="Try writing the thank-you note again"
+          className="h-8 px-2"
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      disabled={busy}
+      onClick={onAsk}
+      aria-label="Write a thank-you note for this split"
+      className="h-8 px-2"
+    >
+      Write thank-you
+    </Button>
+  );
 }
 
 /** Every saved split, newest first, each deletable on its own — plus the chart of their totals. */
@@ -50,6 +111,20 @@ export function SplitHistory() {
   }, [attempt]);
   const readFailed = data !== undefined && !data.ok;
   const splits = data?.ok ? data.rows : [];
+
+  /** The splits whose thank-you is being asked for by a press of the button right here. */
+  const [busyIds, setBusyIds] = useState<string[]>([]);
+
+  const askForThanks = (split: Split) => {
+    setBusyIds((ids) => [...ids, split.id]);
+    generateThanks(split)
+      .catch((error) => {
+        toast.error(`Could not write the thank-you: ${error instanceof Error ? error.message : "unknown error"}`);
+        // Best effort after the report above: mark the row failed so Try again stays available.
+        void setThanksStatus(split.id, "failed").catch(() => undefined);
+      })
+      .finally(() => setBusyIds((ids) => ids.filter((id) => id !== split.id)));
+  };
 
   const deleteOne = async (split: Split) => {
     try {
@@ -76,7 +151,10 @@ export function SplitHistory() {
       <Card>
         <CardHeader>
           <CardTitle>Saved splits</CardTitle>
-          <CardDescription>Kept in this browser, newest first.</CardDescription>
+          <CardDescription>
+            Kept in this browser, newest first. Each split carries a short thank-you note written by
+            an AI model — text you enter is sent to an AI model provider.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -116,7 +194,8 @@ export function SplitHistory() {
               </TableHeader>
               <TableBody>
                 {splits.map((split) => (
-                  <TableRow key={split.id}>
+                  <Fragment key={split.id}>
+                  <TableRow>
                     <TableCell className="whitespace-nowrap pl-0">
                       <time dateTime={new Date(split.savedAt).toISOString().slice(0, 10)}>{shortDate(split.savedAt)}</time>
                     </TableCell>
@@ -138,6 +217,16 @@ export function SplitHistory() {
                       </Button>
                     </TableCell>
                   </TableRow>
+                  <TableRow className="border-t-0 hover:bg-transparent">
+                    <TableCell colSpan={7} className="py-1 pl-0 align-top">
+                      <ThanksArea
+                        split={split}
+                        busy={busyIds.includes(split.id)}
+                        onAsk={() => askForThanks(split)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>

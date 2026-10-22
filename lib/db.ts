@@ -24,6 +24,10 @@ export type Split = {
   total: number;
   /** The headline per-person share, in cents (total divided evenly, half-up). */
   perPerson: number;
+  /** The thank-you message to the group, once the model has written one. Optional: old rows lack it. */
+  thanks?: string;
+  /** "writing" while the model is being asked, "failed" when the last ask could not. Absent on old rows and done rows. */
+  thanksStatus?: "writing" | "failed";
 };
 
 /** Ids are generated here so the data layer never depends on an auto-increment round trip. */

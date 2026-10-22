@@ -21,6 +21,7 @@ import {
 import { useAppConfig } from "@/lib/config/react";
 import { database, newId, type Split } from "@/lib/db";
 import { addSplit, listSplits } from "@/lib/data/splits";
+import { generateThanks } from "@/lib/thanks";
 import {
   centsToText,
   computeSplit,
@@ -81,6 +82,8 @@ export function TipSplitter() {
       tipAmount: result.tipCents,
       total: result.totalCents,
       perPerson: result.perPersonCents,
+      // The thank-you note is asked for right after the save; the history row shows the progress.
+      thanksStatus: "writing",
     };
     try {
       await addSplit(record);
@@ -93,6 +96,11 @@ export function TipSplitter() {
           `Saved: ${money(result.totalCents)} total, ${money(result.perPersonCents)} each — `
           + `${count} split${count === 1 ? "" : "s"} kept in this browser`,
         );
+        // Asked here, on the submit, as the AI helper requires. The split is already stored; if the
+        // model cannot answer, the row keeps its figures and shows why, with a Try again button.
+        void generateThanks(record).catch((error) => {
+          toast.error(`Could not write the thank-you: ${error instanceof Error ? error.message : "unknown error"}`);
+        });
       } else {
         toast.error("Saved, but this browser did not confirm keeping it.");
       }
