@@ -120,11 +120,11 @@ export function SplitHistory() {
                     <TableCell className="whitespace-nowrap pl-0">
                       <time dateTime={new Date(split.savedAt).toISOString().slice(0, 10)}>{shortDate(split.savedAt)}</time>
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right tabular-nums">{centsToText(split.bill)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right tabular-nums">{currency}{centsToText(split.bill)}</TableCell>
                     <TableCell className="whitespace-nowrap text-right tabular-nums">{split.tipPercent}%</TableCell>
                     <TableCell className="text-right tabular-nums">{split.people}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{centsToText(split.total)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{centsToText(split.perPerson)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{currency}{centsToText(split.total)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-medium tabular-nums">{currency}{centsToText(split.perPerson)}</TableCell>
                     <TableCell className="pr-0 text-right">
                       <Button
                         type="button"
