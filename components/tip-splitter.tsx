@@ -443,3 +443,44 @@ function SplitReadout({
     </Card>
   );
 }
+
+/**
+ * The per-person figure, tweened to its new value when the split changes: the digits count from
+ * the old amount to the new one over a third of a second, written straight to the node (no state
+ * updates per frame), and instantly under prefers-reduced-motion.
+ */
+function SlidingMoney({ cents, currency }: { cents: number; currency: string }) {
+  const textRef = useRef<HTMLSpanElement>(null);
+  // What the digits show right now, so a change mid-flight slides from there, not from the last target.
+  const shown = useRef(cents);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const node = textRef.current;
+    if (!node || shown.current === cents) return;
+    const format = (value: number) => `${currency}${centsToText(Math.round(value))}`;
+    if (reduced) {
+      shown.current = cents;
+      node.textContent = format(cents);
+      return;
+    }
+    // Pin the starting frame before the tween's first tick, so the value never flashes ahead.
+    node.textContent = format(shown.current);
+    const controls = animate(shown.current, cents, {
+      duration: 0.35,
+      ease: "easeOut",
+      onUpdate: (value) => {
+        shown.current = value;
+        node.textContent = format(value);
+      },
+    });
+    return () => controls.stop();
+  }, [cents, currency, reduced]);
+
+  return (
+    <span ref={textRef} className="tabular-nums">
+      {currency}
+      {centsToText(cents)}
+    </span>
+  );
+}
