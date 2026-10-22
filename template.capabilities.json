@@ -15,16 +15,17 @@
         "docs/storage.md",
         "docs/charts.md",
         "docs/notifications.md",
+        "docs/motion.md",
         "docs/files.md",
         "docs/camera.md",
         "docs/audio.md",
         "docs/share.md",
-        "docs/ai.md",
         "docs/sync.md",
         "docs/config.md",
         "docs/home-screen.md",
         "docs/visits.md",
-        "docs/attribution.md"
+        "docs/attribution.md",
+        "docs/ai.md"
       ]
     },
     "storage": {
@@ -52,10 +53,10 @@
       "microphone": true
     },
     "share": true,
-    "ai": true,
     "sync": true,
     "config": true,
-    "install": true
+    "install": true,
+    "ai": true
   },
   "stamp": {
     "recipe": "webapp-nextjs",
@@ -75,14 +76,15 @@
       "home-screen",
       "visits",
       "attribution",
-      "ai"
+      "ai",
+      "motion"
     ],
     "supervisorRevision": "templates-ff73d5073058ef57",
     "storageVersion": "0.4.0",
     "configVersion": "0.1.0",
     "files": {
       ".gitignore": "73ec7442d8e321919c3d0eb5a2fc8f11fbcbf1096ec76b3f9f5e54f6a19a198a",
-      "AGENTS.md": "509ecf6b6c90cb6bdcc0f65f7af732e696752791e4ac40cf74fe819b2e1d5020",
+      "AGENTS.md": "7c2b450e9b5943e15fb3411ea9fd926a3c755e87e76995c3c4cee359617d057f",
       "README.md": "3c77f4fc3541f675ca52d64abb430a7c9fc91838429c187f8bf21ebb6616dfac",
       "app/api/ai/route.ts": "b348bd3c05a266d18dad14ddd7085f8b9779362c3e6a2af77ec8c46d29b76e99",
       "app/app-settings.json/route.ts": "ef98ff371fef8f85aa1c9ccb9653735304269eff856c7e2996fa60d51e3a6c63",
@@ -130,6 +132,7 @@
       "docs/config.md": "e090be78c216a7726e3fd7f85c0f1b718efb2a19d552f5ece7a8d7288afb832a",
       "docs/files.md": "10441627520a2bcd1767bf6802a637a0ed8cf9e18b5146f2fc311f0a72a094cc",
       "docs/home-screen.md": "1af011d1360306cba03d81055afc4f9024b73e91d8b036762a1d49835d1087b2",
+      "docs/motion.md": "95e40ac91ac1ff3c87c60078dd1c938bae49ed0ea97a4f82e8250c2987f18acc",
       "docs/notifications.md": "db1fa3c690a0c35332bcc15f274f08bc17081a8916b3512218927d1e49146f3d",
       "docs/share.md": "15bbcf08dc2cbf9bed5abd6a782a56fd9afaef4dc33bd79f533dc27367890b2f",
       "docs/storage.md": "56a21191932a04e99e88ec40703df4a591f16327a47ca64584be6108c981dfdc",
