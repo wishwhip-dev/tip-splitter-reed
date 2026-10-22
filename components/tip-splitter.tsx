@@ -298,14 +298,35 @@ export function TipSplitter() {
                 })
               }
             />
+
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="sm:self-start"
+                aria-expanded={explanation ? true : undefined}
+                aria-controls={explanation ? "split-explanation" : undefined}
+                onClick={() => setExplanation(explainSplit(result, tipText, money))}
+              >
+                Explain split
+              </Button>
+              {explanation ? (
+                <p
+                  id="split-explanation"
+                  role="status"
+                  className="rounded-lg bg-muted/60 px-4 py-3 text-sm leading-relaxed text-pretty"
+                >
+                  {explanation}
+                </p>
+              ) : null}
+            </div>
         </section>
       ) : null}
     </div>
   );
 }
 
-/** The inline, named problem under a field. Nothing renders while the value is fine. */
-function FieldError({ id, message }: { id: string; message?: string }) {
+/** The inline, named problem under a field. Nothing renders while the value is fine. */function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="text-sm text-destructive">
