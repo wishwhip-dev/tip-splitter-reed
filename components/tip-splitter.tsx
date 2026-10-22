@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useAppConfig } from "@/lib/config/react";
 import { database, newId, type Split } from "@/lib/db";
-import { addSplit } from "@/lib/data/splits";
+import { addSplit, listSplits } from "@/lib/data/splits";
 import {
   centsToText,
   computeSplit,
