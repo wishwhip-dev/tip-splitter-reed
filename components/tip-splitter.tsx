@@ -42,6 +42,9 @@ export function TipSplitter() {
   const [tipInput, setTipInput] = useState<string | null>(null);
   const [people, setPeople] = useState("");
   const [saving, setSaving] = useState(false);
+  // The plain-words sentence shown after "Explain split" is pressed; cleared by Reset and by
+  // editing any field, so the page never shows wording that contradicts the figures on screen.
+  const [explanation, setExplanation] = useState<string | undefined>(undefined);
   // Errors only show for fields the person has typed into, or once a save or calculate was
   // attempted — so a untouched form, and a freshly reset one, are blank and quiet.
   const [attempted, setAttempted] = useState(false);
