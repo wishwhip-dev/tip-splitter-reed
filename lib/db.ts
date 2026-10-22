@@ -40,6 +40,12 @@ export const database = defineDatabase<{ splits: Split }>({
     // Only the primary key and the property the history is ordered by. The amounts are stored but
     // never filtered or sorted by, so indexing them would cost writes and buy nothing.
     { version: 1, stores: { splits: "id, savedAt" } },
+    // v2 re-declares the same store on purpose. A browser holding a database opened by an earlier
+    // build of this same version 1 — one whose splits store carried no savedAt index — never
+    // re-runs version 1, so the index the history sorts by is missing there and every read over
+    // it fails while writes still succeed. Re-declaring the store in a new version makes Dexie
+    // create the missing index during the upgrade; no row changes shape, so no upgrade function.
+    { version: 2, stores: { splits: "id, savedAt" } },
   ],
   // No seed: an empty history is a designed state ("No saved splits yet"), not a broken-looking one.
 });
