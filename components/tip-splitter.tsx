@@ -326,7 +326,22 @@ export function TipSplitter() {
   );
 }
 
-/** The inline, named problem under a field. Nothing renders while the value is fine. */function FieldError({ id, message }: { id: string; message?: string }) {
+/**
+ * Writes one friendly sentence in plain words from the figures on screen — the app's own words,
+ * from its own numbers, with no model and no network behind it.
+ */
+function explainSplit(result: SplitResult, tipText: string, money: (cents: number) => string): string {
+  // "an 18%", "an 8.5%", "an 80%" — but "a 15%", "a 17.5%", "a 20%".
+  const article = /^(8|11|18)/.test(String(Math.trunc(result.tipPercent ?? Number(tipText)))) ? "an" : "a";
+  const who = result.people === 1 ? "1 person" : `${result.people} people`;
+  return [
+    `A ${money(result.billCents)} bill with ${article} ${tipText}% tip split between ${who}`,
+    `comes to ${money(result.totalCents)}, so each person pays ${money(result.perPersonCents)}.`,
+  ].join(" ");
+}
+
+/** The inline, named problem under a field. Nothing renders while the value is fine. */
+function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="text-sm text-destructive">
