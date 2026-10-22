@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppConfig } from "@/lib/config/react";
-import { newId, type Split } from "@/lib/db";
+import { database, newId, type Split } from "@/lib/db";
 import { addSplit } from "@/lib/data/splits";
 import {
   centsToText,
@@ -36,7 +36,7 @@ type FieldProps = "bill" | "tipPercent" | "people";
 /** The calculator: three inputs, the live split, the per-person table and the share button. */
 export function TipSplitter() {
   const { title, currency, defaultTip, quickTips } = useAppConfig(appConfig);
-  const storageStatus = useStorageStatus();
+  const storageStatus = useStorageStatus(database);
 
   const [bill, setBill] = useState("");
   // `null` means the form is still following the configured default tip; typing replaces it.
