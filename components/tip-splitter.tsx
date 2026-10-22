@@ -212,12 +212,15 @@ export function TipSplitter() {
               min="1"
               placeholder="3"
               value={people}
-              onChange={(event) => setPeople(event.target.value)}
-              aria-invalid={errors.people ? true : undefined}
-              aria-describedby={errors.people ? "people-error" : undefined}
+              onChange={(event) => {
+                setPeople(event.target.value);
+                markTouched("people");
+              }}
+              aria-invalid={peopleError ? true : undefined}
+              aria-describedby={peopleError ? "people-error" : undefined}
               className="text-base"
             />
-            <FieldError id="people-error" message={errors.people} />
+            <FieldError id="people-error" message={peopleError} />
           </div>
         </div>
 
