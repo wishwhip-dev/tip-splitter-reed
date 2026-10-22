@@ -293,9 +293,11 @@ export function TipSplitter() {
                 })
               }
             />
-          </>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
+    </div>
+  );
+}
 
 /** The inline, named problem under a field. Nothing renders while the value is fine. */
 function FieldError({ id, message }: { id: string; message?: string }) {
