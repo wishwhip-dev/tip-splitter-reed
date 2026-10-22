@@ -69,7 +69,6 @@ export function SplitHistory() {
     }
   };
 
-  const splits = data ?? [];
   const chartData = splits.map((split) => ({ date: shortDate(split.savedAt), total: split.total / 100 }));
 
   return (
