@@ -117,6 +117,7 @@ export function TipSplitter() {
     setPeople("");
     setTouched({ bill: false, tip: false, people: false });
     setAttempted(false);
+    setExplanation(undefined);
     toast("Fields cleared", {
       description: "The result and breakdown were removed. Saved splits are untouched.",
       action: {
@@ -167,6 +168,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setBill(event.target.value);
                 markTouched("bill");
+                setExplanation(undefined);
               }}
               aria-invalid={billError ? true : undefined}
               aria-describedby={billError ? "bill-error" : undefined}
@@ -193,6 +195,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setTipInput(event.target.value);
                 markTouched("tip");
+                setExplanation(undefined);
               }}
               aria-invalid={tipError ? true : undefined}
               aria-describedby={tipError ? "tip-error" : undefined}
@@ -215,6 +218,7 @@ export function TipSplitter() {
               onChange={(event) => {
                 setPeople(event.target.value);
                 markTouched("people");
+                setExplanation(undefined);
               }}
               aria-invalid={peopleError ? true : undefined}
               aria-describedby={peopleError ? "people-error" : undefined}
@@ -230,6 +234,7 @@ export function TipSplitter() {
           onPick={(preset) => {
             setTipInput(preset);
             markTouched("tip");
+            setExplanation(undefined);
           }}
         />
 
