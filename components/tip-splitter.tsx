@@ -250,8 +250,6 @@ export function TipSplitter() {
         <section ref={resultRef} tabIndex={-1} aria-label={`Split result: ${money(result.perPersonCents)} each`} className="flex flex-col gap-4 outline-none">
           <SplitReadout result={result} money={money} peopleText={people.trim()} tipText={tipText} />
 
-        {result ? (
-          <>
             <Card>
               <CardContent className="pt-6">
                 <Table>
@@ -298,9 +296,6 @@ export function TipSplitter() {
           </>
         ) : null}
       </section>
-    </div>
-  );
-}
 
 /** The inline, named problem under a field. Nothing renders while the value is fine. */
 function FieldError({ id, message }: { id: string; message?: string }) {
