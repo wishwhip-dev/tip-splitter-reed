@@ -61,9 +61,14 @@ export function TipSplitter() {
 
   const money = (cents: number) => `${currency}${centsToText(cents)}`;
 
+  const billError = errors.bill && (touched.bill || attempted) ? errors.bill : undefined;
+  const tipError = errors.tipPercent && (touched.tip || attempted) ? errors.tipPercent : undefined;
+  const peopleError = errors.people && (touched.people || attempted) ? errors.people : undefined;
+
   /** Enter anywhere in the form saves the split; invalid values are refused before any write. */
   const saveSplit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setAttempted(true);
     if (!result || !values || saving) return;
     setSaving(true);
     const record: Omit<Split, "savedAt"> = {
