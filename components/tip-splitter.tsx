@@ -224,11 +224,21 @@ export function TipSplitter() {
           </div>
         </div>
 
-        <QuickTips presets={quickTips} value={tipText} onPick={setTipInput} />
+        <QuickTips
+          presets={quickTips}
+          value={tipText}
+          onPick={(preset) => {
+            setTipInput(preset);
+            markTouched("tip");
+          }}
+        />
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={calculate} className="min-w-28 flex-1 sm:flex-none">
             Calculate
+          </Button>
+          <Button type="button" variant="outline" onClick={resetFields} className="min-w-28 flex-1 sm:flex-none">
+            Reset
           </Button>
           <Button type="submit" disabled={saving} className="min-w-28 flex-1 sm:flex-none">
             {saving ? "Saving…" : "Save split"}
@@ -236,8 +246,9 @@ export function TipSplitter() {
         </div>
       </form>
 
-      <section ref={resultRef} tabIndex={-1} aria-label={resultTitle} className="flex flex-col gap-4 outline-none">
-        <SplitReadout result={result} errors={errors} money={money} peopleText={people.trim()} tipText={tipText} />
+      {result ? (
+        <section ref={resultRef} tabIndex={-1} aria-label={`Split result: ${money(result.perPersonCents)} each`} className="flex flex-col gap-4 outline-none">
+          <SplitReadout result={result} money={money} peopleText={people.trim()} tipText={tipText} />
 
         {result ? (
           <>
