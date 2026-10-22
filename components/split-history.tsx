@@ -151,7 +151,10 @@ export function SplitHistory() {
       <Card>
         <CardHeader>
           <CardTitle>Saved splits</CardTitle>
-          <CardDescription>Kept in this browser, newest first.</CardDescription>
+          <CardDescription>
+            Kept in this browser, newest first. Each split carries a short thank-you note written by
+            an AI model — text you enter is sent to an AI model provider.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -191,7 +194,8 @@ export function SplitHistory() {
               </TableHeader>
               <TableBody>
                 {splits.map((split) => (
-                  <TableRow key={split.id}>
+                  <Fragment key={split.id}>
+                  <TableRow>
                     <TableCell className="whitespace-nowrap pl-0">
                       <time dateTime={new Date(split.savedAt).toISOString().slice(0, 10)}>{shortDate(split.savedAt)}</time>
                     </TableCell>
@@ -213,6 +217,16 @@ export function SplitHistory() {
                       </Button>
                     </TableCell>
                   </TableRow>
+                  <TableRow className="border-t-0 hover:bg-transparent">
+                    <TableCell colSpan={7} className="py-1 pl-0 align-top">
+                      <ThanksArea
+                        split={split}
+                        busy={busyIds.includes(split.id)}
+                        onAsk={() => askForThanks(split)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
