@@ -92,6 +92,7 @@ export function TipSplitter() {
 
   /** Calculate scrolls to what it calculated, or lands on the first field it could not. */
   const calculate = () => {
+    setAttempted(true);
     if (result && resultRef.current) {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
       resultRef.current.focus();
@@ -104,6 +105,28 @@ export function TipSplitter() {
     ];
     const first = order.find(({ field }) => errors[field]);
     (first?.ref ?? billRef).current?.focus();
+  };
+
+  /** Reset clears the form back to empty and hides the result; the saved history is not touched. */
+  const resetFields = () => {
+    const previous = { bill, tipInput, people };
+    setBill("");
+    setTipInput("");
+    setPeople("");
+    setTouched({ bill: false, tip: false, people: false });
+    setAttempted(false);
+    toast("Fields cleared", {
+      description: "The result and breakdown were removed. Saved splits are untouched.",
+      action: {
+        label: "Undo",
+        onClick: () => {
+          setBill(previous.bill);
+          setTipInput(previous.tipInput);
+          setPeople(previous.people);
+          setTouched({ bill: true, tip: true, people: true });
+        },
+      },
+    });
   };
 
   const resultTitle = result ? `Split result: ${money(result.perPersonCents)} each` : "Split result";
