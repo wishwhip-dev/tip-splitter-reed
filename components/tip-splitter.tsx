@@ -25,7 +25,6 @@ import {
   centsToText,
   computeSplit,
   parseSplitInputs,
-  type SplitErrors,
   type SplitResult,
 } from "@/lib/split";
 import { useStorageStatus } from "@/lib/storage/react";
@@ -43,6 +42,12 @@ export function TipSplitter() {
   const [tipInput, setTipInput] = useState<string | null>(null);
   const [people, setPeople] = useState("");
   const [saving, setSaving] = useState(false);
+  // Errors only show for fields the person has typed into, or once a save or calculate was
+  // attempted — so a untouched form, and a freshly reset one, are blank and quiet.
+  const [attempted, setAttempted] = useState(false);
+  const [touched, setTouched] = useState({ bill: false, tip: false, people: false });
+  const markTouched = (field: "bill" | "tip" | "people") =>
+    setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
 
   const billRef = useRef<HTMLInputElement>(null);
   const tipRef = useRef<HTMLInputElement>(null);
@@ -55,9 +60,14 @@ export function TipSplitter() {
 
   const money = (cents: number) => `${currency}${centsToText(cents)}`;
 
+  const billError = errors.bill && (touched.bill || attempted) ? errors.bill : undefined;
+  const tipError = errors.tipPercent && (touched.tip || attempted) ? errors.tipPercent : undefined;
+  const peopleError = errors.people && (touched.people || attempted) ? errors.people : undefined;
+
   /** Enter anywhere in the form saves the split; invalid values are refused before any write. */
   const saveSplit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setAttempted(true);
     if (!result || !values || saving) return;
     setSaving(true);
     const record: Omit<Split, "savedAt"> = {
@@ -81,6 +91,7 @@ export function TipSplitter() {
 
   /** Calculate scrolls to what it calculated, or lands on the first field it could not. */
   const calculate = () => {
+    setAttempted(true);
     if (result && resultRef.current) {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
       resultRef.current.focus();
@@ -95,7 +106,27 @@ export function TipSplitter() {
     (first?.ref ?? billRef).current?.focus();
   };
 
-  const resultTitle = result ? `Split result: ${money(result.perPersonCents)} each` : "Split result";
+  /** Reset clears the form back to empty and hides the result; the saved history is not touched. */
+  const resetFields = () => {
+    const previous = { bill, tipInput, people };
+    setBill("");
+    setTipInput("");
+    setPeople("");
+    setTouched({ bill: false, tip: false, people: false });
+    setAttempted(false);
+    toast("Fields cleared", {
+      description: "The result and breakdown were removed. Saved splits are untouched.",
+      action: {
+        label: "Undo",
+        onClick: () => {
+          setBill(previous.bill);
+          setTipInput(previous.tipInput);
+          setPeople(previous.people);
+          setTouched({ bill: true, tip: true, people: true });
+        },
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -130,13 +161,16 @@ export function TipSplitter() {
               min="0"
               placeholder="84.50"
               value={bill}
-              onChange={(event) => setBill(event.target.value)}
-              aria-invalid={errors.bill ? true : undefined}
-              aria-describedby={errors.bill ? "bill-error" : undefined}
+              onChange={(event) => {
+                setBill(event.target.value);
+                markTouched("bill");
+              }}
+              aria-invalid={billError ? true : undefined}
+              aria-describedby={billError ? "bill-error" : undefined}
               className="pl-9 text-base"
             />
           </div>
-          <FieldError id="bill-error" message={errors.bill} />
+          <FieldError id="bill-error" message={billError} />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -153,12 +187,15 @@ export function TipSplitter() {
               max="100"
               placeholder="18"
               value={tipText}
-              onChange={(event) => setTipInput(event.target.value)}
-              aria-invalid={errors.tipPercent ? true : undefined}
-              aria-describedby={errors.tipPercent ? "tip-error" : undefined}
+              onChange={(event) => {
+                setTipInput(event.target.value);
+                markTouched("tip");
+              }}
+              aria-invalid={tipError ? true : undefined}
+              aria-describedby={tipError ? "tip-error" : undefined}
               className="text-base"
             />
-            <FieldError id="tip-error" message={errors.tipPercent} />
+            <FieldError id="tip-error" message={tipError} />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="people">People</Label>
@@ -172,20 +209,33 @@ export function TipSplitter() {
               min="1"
               placeholder="3"
               value={people}
-              onChange={(event) => setPeople(event.target.value)}
-              aria-invalid={errors.people ? true : undefined}
-              aria-describedby={errors.people ? "people-error" : undefined}
+              onChange={(event) => {
+                setPeople(event.target.value);
+                markTouched("people");
+              }}
+              aria-invalid={peopleError ? true : undefined}
+              aria-describedby={peopleError ? "people-error" : undefined}
               className="text-base"
             />
-            <FieldError id="people-error" message={errors.people} />
+            <FieldError id="people-error" message={peopleError} />
           </div>
         </div>
 
-        <QuickTips presets={quickTips} value={tipText} onPick={setTipInput} />
+        <QuickTips
+          presets={quickTips}
+          value={tipText}
+          onPick={(preset) => {
+            setTipInput(preset);
+            markTouched("tip");
+          }}
+        />
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" onClick={calculate} className="min-w-28 flex-1 sm:flex-none">
             Calculate
+          </Button>
+          <Button type="button" variant="outline" onClick={resetFields} className="min-w-28 flex-1 sm:flex-none">
+            Reset
           </Button>
           <Button type="submit" disabled={saving} className="min-w-28 flex-1 sm:flex-none">
             {saving ? "Saving…" : "Save split"}
@@ -193,11 +243,10 @@ export function TipSplitter() {
         </div>
       </form>
 
-      <section ref={resultRef} tabIndex={-1} aria-label={resultTitle} className="flex flex-col gap-4 outline-none">
-        <SplitReadout result={result} errors={errors} money={money} peopleText={people.trim()} tipText={tipText} />
+      {result ? (
+        <section ref={resultRef} tabIndex={-1} aria-label={`Split result: ${money(result.perPersonCents)} each`} className="flex flex-col gap-4 outline-none">
+          <SplitReadout result={result} money={money} peopleText={people.trim()} tipText={tipText} />
 
-        {result ? (
-          <>
             <Card>
               <CardContent className="pt-6">
                 <Table>
@@ -241,9 +290,8 @@ export function TipSplitter() {
                 })
               }
             />
-          </>
-        ) : null}
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -267,7 +315,8 @@ function QuickTips({
   value: string;
   onPick: (preset: string) => void;
 }) {
-  const current = Number(value);
+  // `Number("")` is 0, not NaN — a blank field must not light up a "0%" preset.
+  const current = value.trim() === "" ? Number.NaN : Number(value);
   return (
     <div role="group" aria-label="Quick tip percentages" className="flex flex-wrap gap-2">
       {presets.map((preset) => {
@@ -291,34 +340,20 @@ function QuickTips({
 }
 
 /**
- * The live readout. While the values are valid the per-person share is the largest figure on the
- * panel, with the tip and the total smaller beneath it; while they are not, there are no figures.
+ * The live readout: the per-person share is the largest figure on the panel, with the tip amount
+ * and the total smaller beneath it. It only renders while the values are valid.
  */
 function SplitReadout({
   result,
-  errors,
   money,
   peopleText,
   tipText,
 }: {
-  result: SplitResult | undefined;
-  errors: SplitErrors;
+  result: SplitResult;
   money: (cents: number) => string;
   peopleText: string;
   tipText: string;
 }) {
-  if (!result) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col gap-1 pt-6 text-center">
-          <p className="font-medium">No split to show yet</p>
-          <p className="text-sm text-muted-foreground">
-            {errors.bill ?? errors.tipPercent ?? errors.people ?? "Enter a bill, a tip and how many people."}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 pt-6 text-center">
