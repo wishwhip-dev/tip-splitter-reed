@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { useAppConfig } from "@/lib/config/react";
-import { type Split } from "@/lib/db";
+import { database, type Split } from "@/lib/db";
 import { addSplit, deleteSplit, listSplits } from "@/lib/data/splits";
 import { centsToText } from "@/lib/split";
 import { useStoredQuery } from "@/lib/storage/react";
@@ -34,7 +34,7 @@ function shortDate(ms: number): string {
 /** Every saved split, newest first, each deletable on its own — plus the chart of their totals. */
 export function SplitHistory() {
   const { currency } = useAppConfig(appConfig);
-  const { data, isLoading } = useStoredQuery(database_query(listSplits));
+  const { data, isLoading } = useStoredQuery(database, listSplits);
 
   const deleteOne = async (split: Split) => {
     try {
